@@ -67,7 +67,7 @@ class MovingWindowLSTM(BaseEstimator, TransformerMixin):
            [ 6,  7],
            [ 8,  9],
            [10, 11]])
-    >>> new_array = MovingWindowLSTM(3,2)
+    >>> new_array = MovingWindowLSTM(3,2).fit_transform(array)
     array([[[4, 5],
             [2, 3],
             [0, 1]],
