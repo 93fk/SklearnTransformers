@@ -1,6 +1,46 @@
 import numpy as np
+import pandas as pd
 from numpy.lib.stride_tricks import as_strided
 from sklearn.base import BaseEstimator, TransformerMixin
+
+class FeatureExtractor(BaseEstimator, TransformerMixin):
+    """ Returns selected columns from a pandas DataFrame object.
+
+    Parameters
+    ----------
+    column_names: list, string, required
+        columns to be selected
+    ----------
+
+    Use example:
+    import pandas as pd
+
+    >>> df = pd.DataFrame([[1, 2, 3], [4, 5, 6], [7, 8, 9]], columns=['A', 'B', 'C'])
+    >>> print(df.to_markdown())
+    |    |   A |   B |   C |
+    |---:|----:|----:|----:|
+    |  0 |   1 |   2 |   3 |
+    |  1 |   4 |   5 |   6 |
+    |  2 |   7 |   8 |   9 |
+    >>> new_df = FeatureExtractor(['A', 'C']).fit_transform(df)
+    >>> print(new_df.to_markdown())
+    |    |   A |   C |
+    |---:|----:|----:|
+    |  0 |   1 |   3 |
+    |  1 |   4 |   6 |
+    |  2 |   7 |   9 |
+    """
+    def __init__(self, column_names: list):
+        self._column_names = column_names
+        
+    def fit(self, X: pd.DataFrame, y=None):
+        return self 
+    
+    def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+        if isinstance(X[self._column_names], pd.core.frame.DataFrame):
+            return X[self._column_names]
+        else:
+            return X[self._column_names].to_frame()
 
 class MovingWindowLSTM(BaseEstimator, TransformerMixin):
     """Returns 3D numpy.ndarray ready to fedd into LSTM like models.
