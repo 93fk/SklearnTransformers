@@ -4,12 +4,12 @@ from numpy.lib.stride_tricks import as_strided
 from sklearn.base import BaseEstimator, TransformerMixin
 
 class FeatureExtractor(BaseEstimator, TransformerMixin):
-    """ Returns selected columns from a pandas DataFrame object.
+    """Returns selected columns from a pandas DataFrame object.
 
     Parameters
     ----------
-    column_names: list, string, required
-        columns to be selected
+    column_names: list, string; required
+        columns to be selected.
     ----------
 
     Use example:
@@ -42,6 +42,53 @@ class FeatureExtractor(BaseEstimator, TransformerMixin):
         else:
             return X[self._column_names].to_frame()
 
+class TypeExtractor(BaseEstimator, TransformerMixin):
+    """This Transformer acts as a Sklearn.Pipeline wrapper for pandas.select_dtypes() method
+
+    Parameters
+    ----------
+    col_type: string, list-like; required
+        name of dtype(s) to be acted on.
+
+    include: bool: required
+        whether or not selected dtypes should be inlcuded or excluded.
+    ----------
+
+    Use example:
+    import pandas as pd
+
+    >>> df = pd.DataFrame([[1, 'X', True], [2, 'Y', True], [3, 'Z', False]], columns=['A', 'B', 'C'])
+    >>> print(df.to_markdown())
+    |    |   A | B   | C     |
+    |---:|----:|:----|:------|
+    |  0 |   1 | X   | True  |
+    |  1 |   2 | Y   | True  |
+    |  2 |   3 | Z   | False |
+    >>> new_df = TypeExtactor('number', include=True).fit_transform(df)
+    >>> print(new_df.to_markdown())
+    |    |   A |
+    |---:|----:|
+    |  0 |   1 |
+    |  1 |   2 |
+    |  2 |   3 |
+    """
+    def __init__(self, col_type: str, include: bool=True):
+        self._col_type = col_type
+        self._include = include
+        
+    def fit(self, X: pd.DataFrame, y=None):
+        if self._include:
+            self._columns = X.select_dtypes(include=self._col_type).columns._data.tolist()
+        else:
+            self._columns = X.select_dtypes(exclude=self._col_type).columns._data.tolist()
+        return self 
+    
+    def transform(self, X: pd.DataFrame, y=None) -> pd.DataFrame:
+        if isinstance(X[self._columns], pd.core.frame.DataFrame):
+            return X[self._columns]
+        else:
+            return X[self._columns].to_frame()
+
 class MovingWindowLSTM(BaseEstimator, TransformerMixin):
     """Returns 3D numpy.ndarray ready to fedd into LSTM like models.
 
@@ -50,10 +97,10 @@ class MovingWindowLSTM(BaseEstimator, TransformerMixin):
 
     Parameters
     ----------
-    predictor_window: int, required
+    predictor_window: int; required
         number of prevoius steps to use in the prediciton.
 
-    target_window: int, required
+    target_window: int; required
         number of next steps to predict.
     ----------
 
